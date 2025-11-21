@@ -8,43 +8,39 @@ import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase/client';
 import Link from 'next/link';
 
-// 1. تعريف نوع البيانات للوحدة الدراسية لمساعدة TypeScript
-type Unit = {
+// 1. تعديل: تغيير title إلى name ليطابق قاعدة البيانات
+type Subject = {
   id: string;
-  title: string;
+  name: string; // تم التعديل هنا
 };
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
   
-  // 2. حالة جديدة لتخزين الوحدات التي سنجلبها من قاعدة البيانات
-  const [units, setUnits] = useState<Unit[]>([]);
-  // حالة لتتبع عملية التحميل
+  const [subjects , setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
       router.push('/login');
     } else {
-      // 3. دالة لجلب الوحدات الدراسية
-      const fetchUnits = async () => {
+      const fetchSubjects = async () => {
         setLoading(true);
-        // جلب البيانات من جدول 'units'
-        const { data: unitsData, error } = await supabase
-          .from('units')
-          .select('*')
-          .order('id', { ascending: true }); // ترتيب الوحدات حسب الـ id
+        // لا يوجد تغيير هنا، الكود صحيح
+        const { data: subjectData, error } = await supabase
+          .from('subjects')
+          .select('id, name'); // يمكن تحديد الأعمدة لتحسين الأداء
 
         if (error) {
-          console.error('Error fetching units:', error);
+          console.error('Error fetching subjects:', error);
         } else {
-          setUnits(unitsData);
+          setSubjects(subjectData);
         }
         setLoading(false);
       };
 
-      fetchUnits();
+      fetchSubjects();
     }
   }, [user, router]);
 
@@ -53,17 +49,16 @@ export default function DashboardPage() {
     router.push('/login');
   };
   
-  // 4. عرض حالة تحميل مختلفة أثناء جلب البيانات
   if (loading) {
-    return <div>يتم تحميل الوحدات الدراسية...</div>;
+    return <div className="text-center p-10">يتم تحميل المواد الدراسية...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-gray-800 p-8 text-white">
       <header className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold">لوحة التحكم</h1>
-          <p className="text-gray-600">أهلاً بك، {user?.email}</p>
+          <p className="text-gray-400">أهلاً بك، {user?.email}</p>
         </div>
         <button
           onClick={handleLogout}
@@ -74,25 +69,26 @@ export default function DashboardPage() {
       </header>
       
       <main>
-        <h2 className="text-2xl font-semibold mb-4">الوحدات الدراسية</h2>
-        {/* 5. عرض قائمة الوحدات الدراسية */}
-        {units.length > 0 ? (
+        <h2 className="text-2xl font-semibold mb-4">المواد الدراسية:</h2>
+        {subjects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {units.map((unit) => (
-              <div key={unit.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <h3 className="text-xl font-bold text-indigo-700">{unit.title}</h3>
-                {/* لاحقًا، هذا الزر سينقلنا إلى صفحة الدروس لهذه الوحدة */}
+            {/* 2. تعديل: تغيير اسم المتغير من unit إلى subject للوضوح */}
+            {subjects.map((subject) => (
+              <div key={subject.id} className="bg-gray-700 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                {/* تعديل: استخدام subject.name */}
+                <h3 className="text-xl font-bold text-indigo-400">{subject.name}</h3>
                 <Link 
-                  href={`/units/${unit.id}`}
+                  href={`/units/${subject.id}`}
                   className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
                 >
-                  عرض الدروس
+                  {/* 3. تعديل: تغيير النص ليعكس الوظيفة الصحيحة */}
+                  عرض الوحدات
                 </Link>
               </div>
             ))}
           </div>
         ) : (
-          <p>لم يتم العثور على وحدات دراسية. قم بإضافتها من لوحة تحكم Supabase.</p>
+          <p>لم يتم العثور على مواد دراسية.</p>
         )}
       </main>
     </div>
