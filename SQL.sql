@@ -84,13 +84,13 @@ VALUES
   ('expert', 'خبير الفيزياء', 'أكملت جميع دروس الفيزياء بنجاح! لقد كشفت أسرار الكون!', false);
 
 
-  /*4*/
+  
   DELETE FROM public.lessons;
 DELETE FROM public.units;
 DELETE FROM public.subjects;
 DELETE FROM public.achievements;
 
-/*5*/
+
 -- الخطوة 1: احذف من الجداول التي لديها مفاتيح أجنبية (الجداول الابنة)
 DELETE FROM public.user_achievements;
 DELETE FROM public.user_lesson_progress;
@@ -105,12 +105,12 @@ DELETE FROM public.units;
 DELETE FROM public.subjects;
 DELETE FROM public.achievements;
 
-/*6*/
+
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
 
-/*7*/
+
 SELECT
   column_name,
   data_type,
@@ -119,13 +119,13 @@ SELECT
 FROM information_schema.columns
 WHERE table_name = 'lessons';
 
-/*8*/
+
 SELECT * FROM public.units;
 
 
 
 
-/*9*/
+
 SELECT
   -- معلومات العمود الأساسية
   c.table_name,
@@ -178,7 +178,7 @@ ORDER BY
   c.table_name, c.ordinal_position;
 
 
-  /*10*/
+  
 
   -- ========= إصلاح جدول achievements =========
 
@@ -256,7 +256,7 @@ ALTER TABLE public.user_lesson_progress
   ALTER COLUMN confidence DROP DEFAULT; -- إزالة القيمة الافتراضية للنص الفارغ
 
 
-  /*11*/
+  
   -- ========= إصلاح جدول achievements =========
 ALTER TABLE public.achievements
   ALTER COLUMN id DROP DEFAULT,
@@ -315,7 +315,7 @@ ALTER TABLE public.user_lesson_progress
   ALTER COLUMN confidence DROP DEFAULT;
 
 
-  /*12*/
+  
   -- استخدام جملة WITH لتقسيم العملية إلى خطوات منطقية ومترابطة
 
 WITH new_subject AS (
@@ -393,7 +393,7 @@ VALUES
 
 
 
-  /*13*/
+  
   -- ========= جدول subjects (المواد) =========
 -- 1. تفعيل RLS على الجدول
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
@@ -433,7 +433,7 @@ ON public.achievements
 FOR SELECT
 USING (true);
 
-/*14*/
+
 -- !! مثال غير آمن - لا تستخدمه كما هو !!
 ALTER TABLE public.user_lesson_progress ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "UNSAFE - Allow public read access to all user progress"
@@ -441,7 +441,7 @@ ON public.user_lesson_progress
 FOR SELECT
 USING (true);
 
-/*15*/
+
 -- ========= جدول user_lesson_progress (تقدم المستخدم في الدروس) =========
 -- 1. تفعيل RLS على الجدول
 ALTER TABLE public.user_lesson_progress ENABLE ROW LEVEL SECURITY;

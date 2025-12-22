@@ -1,5 +1,3 @@
-// app/components/Header.tsx
-
 "use client";
 
 import Link from "next/link";
@@ -21,28 +19,22 @@ export default function Header() {
   );
 
   return (
-    // تم تغيير p-3 إلى p-2 لتقليل المساحة على الموبايل
     <header className="bg-gray-800 border-b border-gray-700 text-white p-1 md:p-3 sticky top-0 z-200 shadow-lg bg-opacity-95 backdrop-blur-sm">
       <div className="container mx-auto flex justify-between items-center">
-        {/* الشعار */}
         <Link
           href="/dashboard"
           className="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 hover:opacity-80 transition-opacity flex items-center gap-1 md:gap-2 shrink-0"
         >
           <span className="text-2xl">🎓</span>
-          {/* إخفاء النص في الشاشات الصغيرة جداً */}
+
           <span className="hidden xs:inline sm:inline">منصة البكالوريا</span>
         </Link>
 
-        {/* قسم اللاعب - تم تحسين المرونة flex-wrap وتعديل الأحجام */}
         <div className="flex items-center gap-2 bg-gray-900 px-2 py-1 rounded-full border border-gray-700 shadow-inner max-w-full">
-          
-          {/* دائرة المستوى */}
           <div className="relative w-8 h-8 md:w-9 md:h-9 flex items-center justify-center bg-indigo-600 rounded-full border-2 border-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.5)] shrink-0">
             <span className="font-bold text-xs md:text-sm">{globalLevel}</span>
           </div>
 
-          {/* تفاصيل الـ XP - إخفاؤها تماماً في الموبايل لتوفير المساحة */}
           <div className="hidden sm:flex flex-col w-24 sm:w-32">
             <div className="flex justify-between text-[10px] text-gray-400 mb-0.5 px-1">
               <span>LVL {globalLevel}</span>
@@ -67,7 +59,6 @@ export default function Header() {
             <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
           </Link>
 
-          {/* رابط الملف الشخصي */}
           <Link
             href="/profile"
             className="flex items-center gap-2 hover:bg-gray-800 p-0.5 md:p-1 md:pr-3 rounded-full transition-all group shrink-0"
@@ -94,7 +85,6 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* زر الإدارة - أيقونة فقط في الموبايل */}
           {profile?.is_admin && (
             <Link
               href="/admin"

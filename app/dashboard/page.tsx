@@ -42,7 +42,6 @@ export default function DashboardPage() {
     const { error } = await supabase.from("subjects").delete().eq("id", id);
 
     if (!error) {
-      // تحديث القائمة محلياً لإخفاء العنصر المحذوف
       setSubjects((prev) => prev.filter((s) => s.id !== id));
     } else {
       alert(error.message);
@@ -86,14 +85,11 @@ export default function DashboardPage() {
 
         {subjects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* ... داخل الـ map ... */}
             {subjects.map((subject) => (
-              // 1. الحاوية الرئيسية: تعطينا مرجعية للمكان (relative) وللتحويم (group)
               <div
                 key={subject.id}
                 className="relative group rounded-xl overflow-hidden shadow-lg transition-all hover:shadow-indigo-500/20"
               >
-                {/* 2. الرابط: يأخذ مساحة البطاقة كاملة */}
                 <Link
                   href={`/units/${subject.id}`}
                   className="block bg-gray-800 p-2 md:p-6 border border-gray-700 h-full hover:border-indigo-500 transition-colors"
@@ -111,14 +107,12 @@ export default function DashboardPage() {
                   </p>
                 </Link>
 
-                {/* 3. زر الحذف: مفصول عن الرابط، ويملك z-50 ليظهر فوق الجميع */}
                 {isAdmin && (
                   <button
                     onClick={(e) => {
-                      e.stopPropagation(); // منع الضغط على الرابط بالخطأ
+                      e.stopPropagation();
                       handleDeleteSubject(subject.id);
                     }}
-                    // لاحظ الكلاسات: absolute (عائم), z-50 (في المقدمة), top/left (المكان)
                     className="absolute top-3 left-3 z-50 bg-red-600 hover:bg-red-700 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-md transform hover:scale-110"
                     title="حذف المادة"
                   >

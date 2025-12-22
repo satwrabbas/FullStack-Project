@@ -1,5 +1,3 @@
-// app/lessons/[unitId]/page.tsx
-
 "use client";
 
 import React from "react";
@@ -8,7 +6,6 @@ import Link from "next/link";
 import { supabase } from "@/app/lib/supabase/client";
 import { useAuth } from "@/app/components/AuthProvider";
 
-// تعريف مستويات الثقة الخمسة
 const CONFIDENCE_LEVELS = [
   { value: "🤯", label: "ضائع تماماً", color: "bg-red-900/50 border-red-500" },
   {
@@ -32,8 +29,8 @@ type Lesson = {
   order: number;
   completed: boolean;
   note: string | null;
-  confidence: string | null; // إضافة الثقة
-  isNoteDirty?: boolean; // خاصية للواجهة فقط: هل تم تعديل الملاحظة ولم تُحفظ؟
+  confidence: string | null;
+  isNoteDirty?: boolean;
 };
 
 type Unit = {
@@ -46,7 +43,7 @@ export default function UnitPage({
 }: {
   params: Promise<{ unitId: string }>;
 }) {
-  const { user,isAdmin ,updateLocalXP, refreshXP } = useAuth();
+  const { user, isAdmin, updateLocalXP, refreshXP } = useAuth();
   const [unit, setUnit] = useState<Unit | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,22 +55,19 @@ export default function UnitPage({
     const fetchUnitAndLessons = async () => {
       setLoading(true);
 
-      // 1. جلب الدروس
       const { data: lessonsData, error: lessonsError } = await supabase
         .from("lessons")
         .select("id, title, xp_value, order")
         .eq("unit_id", unitId)
         .order("order", { ascending: true });
 
-      // 2. جلب التقدم (بما في ذلك الثقة والملاحظات)
       const lessonIds = lessonsData?.map((l) => l.id) || [];
       const { data: progressData, error: progressError } = await supabase
         .from("user_lesson_progress")
-        .select("lesson_id, completed, note, confidence") // <-- جلب confidence
+        .select("lesson_id, completed, note, confidence")
         .eq("user_id", user.id)
         .in("lesson_id", lessonIds);
 
-      // 3. جلب الوحدة
       const { data: unitData, error: unitError } = await supabase
         .from("units")
         .select("title, subject_id")
@@ -92,8 +86,8 @@ export default function UnitPage({
             ...lesson,
             completed: progress?.completed || false,
             note: progress?.note || null,
-            confidence: progress?.confidence || null, // القيمة الافتراضية
-            isNoteDirty: false, // عند التحميل، الملاحظة غير معدلة
+            confidence: progress?.confidence || null,
+            isNoteDirty: false,
           };
         });
         setUnit(unitData);
@@ -105,147 +99,125 @@ export default function UnitPage({
     fetchUnitAndLessons();
   }, [user, unitId]);
 
-  // --- الدوال المساعدة ---
-
-  // دالة التحقق من الإنجازات (مختصرة هنا للتركيز على التغييرات الجديدة)
-const checkAndUnlockAchievements = async () => {
+  const checkAndUnlockAchievements = async () => {
     if (!user || !unitId) return;
 
-    // 1. التحقق من الإنجازات الرقمية (1، 5، 10 دروس) - (كما كان سابقاً)
     const { count } = await supabase
-      .from('user_lesson_progress')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('completed', true);
+      .from("user_lesson_progress")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("completed", true);
 
     const achievementsToUnlock: string[] = [];
-    if (count === 1) achievementsToUnlock.push('first_spark');
-    if (count === 5) achievementsToUnlock.push('five_lessons');
-    if (count === 10) achievementsToUnlock.push('ten_lessons');
+    if (count === 1) achievementsToUnlock.push("first_spark");
+    if (count === 5) achievementsToUnlock.push("five_lessons");
+    if (count === 10) achievementsToUnlock.push("ten_lessons");
 
-    // =========================================================
-    // 2. الجديد: التحقق من إنجاز "إنهاء الوحدة الحالية"
-    // =========================================================
-    
-    // أولاً: نحتاج لمعرفة هل لهذه الوحدة إنجاز مرتبط؟ وما هو عدد دروسها الكلي؟
     const { data: unitData } = await supabase
-      .from('units')
-      .select('linked_achievement_id, lessons(id)')
-      .eq('id', unitId)
+      .from("units")
+      .select("linked_achievement_id, lessons(id)")
+      .eq("id", unitId)
       .single();
 
     if (unitData?.linked_achievement_id) {
-      // هذه الوحدة لها جائزة! لنتحقق هل أنهى الطالب كل دروسها؟
-      
       const totalLessonsInUnit = unitData.lessons.length;
-      
-      // جلب عدد الدروس المكتملة في *هذه الوحدة فقط*
+
       const lessonIds = unitData.lessons.map((l: any) => l.id);
       const { count: completedInUnit } = await supabase
-        .from('user_lesson_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('completed', true)
-        .in('lesson_id', lessonIds);
+        .from("user_lesson_progress")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("completed", true)
+        .in("lesson_id", lessonIds);
 
-      // هل العدد المكتمل يساوي العدد الكلي؟
       if (completedInUnit === totalLessonsInUnit) {
         achievementsToUnlock.push(unitData.linked_achievement_id);
       }
     }
 
-    // =========================================================
-    // 3. منح الإنجازات المستحقة (الكود المشترك)
-    // =========================================================
     for (const achievementId of achievementsToUnlock) {
-      // هل يملكه مسبقاً؟
       const { data: existing } = await supabase
-        .from('user_achievements')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('achievement_id', achievementId)
+        .from("user_achievements")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("achievement_id", achievementId)
         .maybeSingle();
 
       if (!existing) {
-        // مبروك!
-        const { error } = await supabase.from('user_achievements').insert({
-            user_id: user.id,
-            achievement_id: achievementId
+        const { error } = await supabase.from("user_achievements").insert({
+          user_id: user.id,
+          achievement_id: achievementId,
         });
-        
+
         if (!error) {
-          // جلب تفاصيل الإنجاز لعرض اسمه في التنبيه
           const { data: achievementDetails } = await supabase
-            .from('achievements')
-            .select('title')
-            .eq('id', achievementId)
+            .from("achievements")
+            .select("title")
+            .eq("id", achievementId)
             .single();
-            
-          alert(`🏆 إنجاز مذهل! لقد حصلت على وسام: ${achievementDetails?.title || achievementId}`);
+
+          alert(
+            `🏆 إنجاز مذهل! لقد حصلت على وسام: ${
+              achievementDetails?.title || achievementId
+            }`
+          );
         }
       }
     }
   };
 
-  // 1. تحديث الإكمال
   const handleToggleComplete = async (
     lessonId: string,
     currentStatus: boolean
   ) => {
     if (!user) return;
 
-    // 1. العثور على الدرس لمعرفة قيمة الـ XP الخاصة به
     const lesson = lessons.find((l) => l.id === lessonId);
     const xpAmount = lesson?.xp_value || 0;
 
     const newStatus = !currentStatus;
 
-    // تحديث محلي فوري
     setLessons((prev) =>
       prev.map((l) => (l.id === lessonId ? { ...l, completed: newStatus } : l))
     );
 
-    // 3. ▼▼▼ التحديث الفوري للـ Header ▼▼▼
     if (newStatus) {
-      // إذا أكمل الدرس، أضف النقاط
       updateLocalXP(xpAmount);
     } else {
-      // إذا ألغى الإكمال، اطرح النقاط
       updateLocalXP(-xpAmount);
     }
 
-    // 4. إرسال الطلب لقاعدة البيانات باستخدام UPSERT (يمنع خطأ التكرار 23505)
-    const { error } = await supabase
-      .from('user_lesson_progress')
-      .upsert(
-        { 
-          user_id: user.id, 
-          lesson_id: lessonId, 
-          completed: newStatus 
-        }, 
-        { onConflict: 'user_id, lesson_id' }
-      );
+    const { error } = await supabase.from("user_lesson_progress").upsert(
+      {
+        user_id: user.id,
+        lesson_id: lessonId,
+        completed: newStatus,
+      },
+      { onConflict: "user_id, lesson_id" }
+    );
 
     if (error) {
-      console.error('Error updating progress:', error.message);
-      setLessons(prev => prev.map(l => l.id === lessonId ? { ...l, completed: !newStatus } : l));
-      updateLocalXP(newStatus ? -xpAmount : xpAmount); // عكس التحديث
+      console.error("Error updating progress:", error.message);
+      setLessons((prev) =>
+        prev.map((l) =>
+          l.id === lessonId ? { ...l, completed: !newStatus } : l
+        )
+      );
+      updateLocalXP(newStatus ? -xpAmount : xpAmount);
     } else {
       if (newStatus === true) {
         checkAndUnlockAchievements();
-        refreshXP(); // الآن ستعمل لأننا استوردناها في الأعلى
+        refreshXP();
       }
     }
   };
 
-  // 2. تحديث مستوى الثقة (جديد)
   const handleChangeConfidence = async (
     lessonId: string,
     newConfidence: string
   ) => {
     if (!user) return;
 
-    // تحديث محلي فوري
     setLessons((prev) =>
       prev.map((l) =>
         l.id === lessonId ? { ...l, confidence: newConfidence } : l
@@ -265,38 +237,35 @@ const checkAndUnlockAchievements = async () => {
         .update({ confidence: newConfidence })
         .eq("id", existingProgress.id);
     } else {
-      await supabase
-        .from("user_lesson_progress")
-        .insert({
-          user_id: user.id,
-          lesson_id: lessonId,
-          confidence: newConfidence,
-        });
+      await supabase.from("user_lesson_progress").insert({
+        user_id: user.id,
+        lesson_id: lessonId,
+        confidence: newConfidence,
+      });
     }
   };
-  
-  const handleDeleteLesson = async (lessonId: string) => {
-  if (!confirm('هل أنت متأكد من حذف هذا الدرس؟')) return;
-  const { error } = await supabase.from('lessons').delete().eq('id', lessonId);
-  if (!error) {
-    setLessons(prev => prev.filter(l => l.id !== lessonId));
-  } else {
-    alert(error.message);
-  }
-};
 
-  // 3. الكتابة في الملاحظة (تحديث محلي فقط + تفعيل زر الحفظ)
+  const handleDeleteLesson = async (lessonId: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذا الدرس؟")) return;
+    const { error } = await supabase
+      .from("lessons")
+      .delete()
+      .eq("id", lessonId);
+    if (!error) {
+      setLessons((prev) => prev.filter((l) => l.id !== lessonId));
+    } else {
+      alert(error.message);
+    }
+  };
+
   const handleNoteChange = (lessonId: string, newNote: string) => {
     setLessons((prevLessons) =>
       prevLessons.map((l) =>
-        l.id === lessonId
-          ? { ...l, note: newNote, isNoteDirty: true } // <-- جعل الزر يظهر
-          : l
+        l.id === lessonId ? { ...l, note: newNote, isNoteDirty: true } : l
       )
     );
   };
 
-  // 4. حفظ الملاحظة (إخفاء الزر بعد الحفظ)
   const handleSaveNote = async (lessonId: string) => {
     if (!user) return;
     const lessonToSave = lessons.find((l) => l.id === lessonId);
@@ -307,7 +276,7 @@ const checkAndUnlockAchievements = async () => {
         user_id: user.id,
         lesson_id: lessonId,
         note: lessonToSave.note,
-        // نحافظ على القيم الأخرى إذا كان السجل جديداً
+
         completed: lessonToSave.completed,
         confidence: lessonToSave.confidence,
       },
@@ -317,7 +286,6 @@ const checkAndUnlockAchievements = async () => {
     if (error) {
       alert("حدث خطأ أثناء حفظ الملاحظة!");
     } else {
-      // إخفاء الزر بعد النجاح
       setLessons((prev) =>
         prev.map((l) => (l.id === lessonId ? { ...l, isNoteDirty: false } : l))
       );
@@ -331,7 +299,7 @@ const checkAndUnlockAchievements = async () => {
       </div>
     );
   }
-return (
+  return (
     <div className="min-h-screen bg-gray-900 p-3 md:p-8 text-gray-100 overflow-x-hidden">
       <header className="mb-6 md:mb-8 max-w-4xl mx-auto">
         <Link
@@ -355,7 +323,6 @@ return (
                 : "bg-gray-800"
             }`}
           >
-            {/* --- زر الحذف (للأدمن فقط) --- */}
             {isAdmin && (
               <button
                 onClick={() => handleDeleteLesson(lesson.id)}
@@ -365,7 +332,6 @@ return (
               </button>
             )}
 
-            {/* --- شريط الحالة العلوي --- */}
             <div
               className={`h-1.5 md:h-2 w-full transition-all ${
                 lesson.completed ? "bg-green-500" : "bg-gray-700"
@@ -373,7 +339,6 @@ return (
             />
 
             <div className="p-4 md:p-6">
-              {/* --- القسم العلوي: العنوان + زر الإتمام --- */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:mb-6">
                 <div className="w-full md:w-auto">
                   <h2
@@ -397,7 +362,6 @@ return (
                   </div>
                 </div>
 
-                {/* زر الإتمام (كامل العرض في الموبايل) */}
                 <button
                   onClick={() =>
                     handleToggleComplete(lesson.id, lesson.completed)
@@ -414,7 +378,6 @@ return (
 
               <hr className="border-gray-700/50 md:my-4 my-1" />
 
-              {/* --- قسم مستوى الثقة --- */}
               <div className="mb-6">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 md:mb-3 block">
                   مستوى الفهم والثقة:
@@ -427,7 +390,6 @@ return (
                         handleChangeConfidence(lesson.id, level.value)
                       }
                       title={level.label}
-                      // flex-1: يجعل الأزرار تتمدد بالتساوي في الموبايل
                       className={`
                         flex-1 md:flex-none justify-center
                         px-3 md:py-2 rounded-lg border transition-all flex items-center gap-2 text-xs md:text-sm
@@ -438,11 +400,15 @@ return (
                         }
                       `}
                     >
-                      <span className="text-base md:text-lg">{level.value}</span>
-                      {/* إخفاء النص الطويل في الموبايل إلا إذا كان مختاراً */}
+                      <span className="text-base md:text-lg">
+                        {level.value}
+                      </span>
+
                       <span
                         className={`whitespace-nowrap ${
-                          lesson.confidence === level.value ? "inline" : "hidden sm:inline"
+                          lesson.confidence === level.value
+                            ? "inline"
+                            : "hidden sm:inline"
                         }`}
                       >
                         {level.label}
@@ -452,13 +418,12 @@ return (
                 </div>
               </div>
 
-              {/* --- قسم الملاحظات --- */}
               <div className="relative group">
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                     📝 ملاحظاتك الخاصة:
                   </label>
-                  {/* تنبيه التعديل */}
+
                   {lesson.isNoteDirty && (
                     <span className="text-yellow-500 text-[10px] md:text-xs animate-pulse font-medium">
                       ● تم التعديل (غير محفوظ)
@@ -473,7 +438,6 @@ return (
                   className="w-full bg-gray-900/50 text-gray-200 p-3 md:p-4 rounded-lg border border-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-y min-h-[100px] text-sm leading-relaxed placeholder-gray-600"
                 />
 
-                {/* زر الحفظ المشروط */}
                 {lesson.isNoteDirty && (
                   <div className="absolute bottom-3 left-3 animate-fade-in z-10">
                     <button

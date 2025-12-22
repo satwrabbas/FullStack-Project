@@ -1,14 +1,11 @@
-// app/units/[id]/page.tsx
-
-"use client"; // حافظنا عليها لأننا نستخدم useState و useEffect
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/app/lib/supabase/client";
-import React from "react"; // React.use يحتاج إلى استيراد React
+import React from "react";
 
-// 1. تعريف أنواع البيانات الصحيحة لهذه الصفحة
 type Unit = {
   id: string;
   title: string;
@@ -17,7 +14,6 @@ type Subject = {
   name: string;
 };
 
-// 2. استقبال params بنفس الطريقة التي طلبتها
 export default function SubjectPage({
   params,
 }: {
@@ -27,27 +23,24 @@ export default function SubjectPage({
   const [subject, setSubject] = useState<Subject | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
-  const { id: subjectId } = React.use(params); // استخراج id المادة وتسميته subjectId للوضوح
+  const { id: subjectId } = React.use(params);
 
   useEffect(() => {
     if (!subjectId) return;
 
-    // 3. هذا هو المنطق الجديد والصحيح
     const fetchSubjectAndUnits = async () => {
       setLoading(true);
 
-      // جلب اسم المادة لوضعه في العنوان
       const { data: subjectData, error: subjectError } = await supabase
         .from("subjects")
         .select("name")
         .eq("id", subjectId)
         .single();
 
-      // جلب الوحدات التي تنتمي لهذه المادة
       const { data: unitsData, error: unitsError } = await supabase
         .from("units")
         .select("id, title")
-        .eq("subject_id", subjectId) // الشرط الأهم: البحث باستخدام subject_id
+        .eq("subject_id", subjectId)
         .order("order", { ascending: true });
 
       if (subjectError || unitsError) {
@@ -76,11 +69,11 @@ export default function SubjectPage({
       <div className="text-center p-10 text-white">يتم تحميل الوحدات...</div>
     );
   }
-return (
+  return (
     <div className="min-h-screen bg-gray-900 p-3 md:p-8 text-white overflow-x-hidden">
       <header className="mb-6 md:mb-8 max-w-4xl mx-auto">
-        <Link 
-          href="/dashboard" 
+        <Link
+          href="/dashboard"
           className="text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2 mb-4 text-sm md:text-base"
         >
           <span>&larr;</span> العودة إلى لوحة التحكم
@@ -93,7 +86,6 @@ return (
       <main className="max-w-4xl mx-auto">
         <div className="space-y-1 md:space-y-4">
           {units.map((unit) => (
-            // الحاوية: relative + group
             <div
               key={unit.id}
               className="relative group bg-gray-800 p-3 md:p-6 rounded-lg shadow border border-gray-700 hover:border-indigo-500 transition-all"
@@ -113,18 +105,13 @@ return (
                 </button>
               )}
 
-              {/* محتوى البطاقة */}
-              {/* flex-col للموبايل (عناصر فوق بعض) | md:flex-row للابتوب (عناصر بجانب بعض) */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="w-full md:w-auto">
                   <h2 className=" md:text-xl font-semibold text-gray-100 break-words leading-relaxed">
                     {unit.title}
                   </h2>
-                  {/* يمكن إضافة عدد الدروس هنا مستقبلاً إذا توفرت المعلومة */}
-                  {/* <p className="text-xs text-gray-400 mt-1">3 دروس</p> */}
                 </div>
 
-                {/* زر الانتقال */}
                 <Link
                   href={`/lessons/${unit.id}`}
                   className="w-full md:w-auto text-center px-5  py-1 md:py-2 text-sm md:text-base font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-900/20 transition-all transform active:scale-95 z-10"
@@ -135,8 +122,7 @@ return (
             </div>
           ))}
         </div>
-        
-        {/* رسالة في حال عدم وجود وحدات */}
+
         {units.length === 0 && (
           <div className="text-center py-12 text-gray-500 bg-gray-800/50 rounded-lg border border-gray-700 border-dashed">
             <p>لا توجد وحدات مضافة لهذه المادة بعد.</p>
