@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "./AuthProvider";
 
@@ -25,8 +25,13 @@ export default function Header() {
           href="/dashboard"
           className="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 hover:opacity-80 transition-opacity flex items-center gap-1 md:gap-2 shrink-0"
         >
-          <span className="text-2xl">🎓</span>
-
+          <Image
+            src="/logo.svg"
+            alt="شعار المنصة"
+            width={32}
+            height={32}
+            className="w-8 h-8 object-contain"
+          />
           <span className="hidden xs:inline sm:inline">منصة البكالوريا</span>
         </Link>
 

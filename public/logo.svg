@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <!-- تدرج الخلفية -->
+    <linearGradient id="bg-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2F0743" />
+      <stop offset="50%" stop-color="#6A11CB" />
+      <stop offset="100%" stop-color="#2575FC" />
+    </linearGradient>
+    <!-- تدرج النص -->
+    <linearGradient id="text-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF89E2" /> <!-- وردي نيون -->
+      <stop offset="100%" stop-color="#00F5E4" /> <!-- سماوي نيون -->
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="20" fill="url(#bg-grad-1)" />
+  <text x="50%" y="30%" dominant-baseline="middle" text-anchor="middle" font-family="'Nunito', 'Comic Sans MS', cursive" font-size="54" font-weight="bold" fill="url(#text-grad-1)">
+    AB
+  </text>
+  <text x="50%" y="70%" dominant-baseline="middle" text-anchor="middle" font-family="'Nunito', 'Comic Sans MS', cursive" font-size="54" font-weight="bold" fill="url(#text-grad-1)">
+    CE
+  </text>
+</svg>
