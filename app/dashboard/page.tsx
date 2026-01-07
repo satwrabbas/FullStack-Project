@@ -57,7 +57,7 @@ export default function DashboardPage() {
       <header className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-            لوحة القيادة
+            الصفحة الرئيسية 
           </h1>
           <p className="text-gray-400 mt-1">مرحباً، مستكشف العلم!</p>
         </div>
